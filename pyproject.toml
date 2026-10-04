@@ -1,0 +1,29 @@
+[build-system]
+requires = ["setuptools>=61.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "vectorization-1"
+version = "0.1.0"
+description = "A simple project demonstrating vectorization concepts"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "python-dotenv>=1.0.0",
+    "numpy>=2.5.3",
+    "sentence-transformers>=6.1.0",
+    "scikit-learn>=1.9.1",
+    "langchain>=1.4.3",
+    "langchain-openai>=1.6.7",
+    "langgraph>=1.2.12"
+]
+
+[project.scripts]
+test1 = "plain_vector.test_1:test1"
+
+[tool.setuptools]
+package-dir = {"" = "src"}
+
+# This assumes your package code is in a src/ directory (modern layout).
+[tool.setuptools.packages.find]
+where = ["src"]
