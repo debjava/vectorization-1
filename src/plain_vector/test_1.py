@@ -1,7 +1,7 @@
 import numpy as np
 from sentence_transformers import SentenceTransformer
 from sklearn.metrics.pairwise import cosine_similarity
-
+import chromadb
 
 def without_vectorization():
     a = [1, 2, 3, 4]
@@ -68,10 +68,81 @@ def vectorization_usage1():
     )
     print(similarity[0][0])  # 0.9980756
 
+def store_vectors_in_chromadb():
+    # Load embedding model
+    model = SentenceTransformer("all-MiniLM-L6-v2")
+
+    # Create/open a local Chroma database
+    client = chromadb.PersistentClient(path="../../my_vector_db")
+
+    # Create a collection
+    collection = client.get_or_create_collection(name="my_documents")
+    # Add new sentences
+    sentences = [
+        "The cat is sleeping.",
+        "A kitten is taking a nap.",
+        "The car is moving fast.",
+        "THE CaT iS sleEPing"
+    ]
+    ids = [
+        "doc1",
+        "doc2",
+        "doc3",
+        "doc4"
+    ]
+
+    # Create vectors
+    vectors = model.encode(sentences).tolist()
+
+    # Store everything
+    collection.add(
+        ids=ids,
+        documents=sentences,
+        embeddings=vectors
+    )
+
+    print("Data added successfully.")
+
+def query_from_chromadb():
+    query = "Which animal is sleeping?"
+
+    model = SentenceTransformer("all-MiniLM-L6-v2")
+    query_vector = model.encode(query).tolist()
+
+    # Create/open a local Chroma database
+    client = chromadb.PersistentClient(path="../../my_vector_db")
+
+    # Create a collection
+    collection = client.get_or_create_collection(name="my_documents")
+
+    results = collection.query(
+        query_embeddings=[query_vector],
+        n_results=3
+    )
+
+    print(results)
+
+    results = collection.get(
+        include=["documents", "embeddings"]
+    )
+
+    documents = results["documents"]
+    embeddings = results["embeddings"]
+
+    similarities = cosine_similarity(
+        [query_vector],
+        embeddings
+    )[0]
+
+    for document, score in zip(documents, similarities):
+        print(f"{score:.4f} -> {document}")
+
 
 if __name__ == '__main__':
     # without_vectorization()
     # with_vectorization()
     # vectorize_plain_text()
-    vectorization_usage1()
+    # vectorization_usage1()
+    # store_vectors_in_chromadb()
+    query_from_chromadb()
 
