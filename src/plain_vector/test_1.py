@@ -101,7 +101,52 @@ def store_vectors_in_chromadb():
         embeddings=vectors
     )
 
+    # you can also use upsert for both new and modified records.
+    # collection.upsert(
+    #     ids=ids,
+    #     documents=sentences,
+    #     embeddings=vectors
+    # )
+
     print("Data added successfully.")
+
+def update_chromadb():
+    # Load embedding model
+    model = SentenceTransformer("all-MiniLM-L6-v2")
+
+    # Create/open a local Chroma database
+    client = chromadb.PersistentClient(path="../../my_vector_db")
+
+    # Create a collection
+    collection = client.get_or_create_collection(name="my_documents")
+
+    updated_sentence = "The car is moving fast on the road."
+    updated_vector = model.encode(updated_sentence).tolist()
+
+    collection.update(
+        ids=["doc3"],
+        documents=[updated_sentence],
+        embeddings=[updated_vector]
+    )
+    print("Data updated successfully.")
+
+    results = collection.get(
+        include=["documents", "embeddings"]
+    )
+
+    # Retrieve all documents to verify
+
+    for doc_id, document, embedding in zip(
+            results["ids"],
+            results["documents"],
+            results["embeddings"]
+    ):
+        print("=" * 50)
+        print("ID       :", doc_id)
+        print("Document :", document)
+        # print("Vector   :", embedding)
+        print("Dimensions:", len(embedding))
+
 
 def query_from_chromadb():
     query = "Which animal is sleeping?"
@@ -144,5 +189,6 @@ if __name__ == '__main__':
     # vectorize_plain_text()
     # vectorization_usage1()
     # store_vectors_in_chromadb()
-    query_from_chromadb()
+    update_chromadb()
+    # query_from_chromadb()
 
